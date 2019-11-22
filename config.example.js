@@ -1,14 +1,14 @@
 var config = {
-        "securityToken": "the security token they ask you to 'display in your source code'",
+        "securityToken": "ceebb531-5257-4df9-ad99-3385f9d14481",
         "stompHost": "datafeeds.networkrail.co.uk",
         "stompPort": 61618,
         "tdChannel": "TD_ALL_SIG_AREA", // find which one you want to subscribe to here http://nrodwiki.rockshore.net/index.php/TD
         'movementChannel': 'TRAIN_MVT_ALL_TOC', // find which one you want to subscribe to here http://nrodwiki.rockshore.net/index.php/TD
-        "username": "your username",
-        "password": "your password",
+        "username": "17023997@stu.mmu.ac.uk",
+        "password": "c7qr8V@BlRbJ",
         "mongo": {
-                'connectionString': 'mongodb://mongouser:mongopassword@mongohost:27017/mongodbname',
-            'databaseName':'nrdf'
+                'connectionString': 'mongodb://localhost:27017/',
+            	'databaseName':'nrdf'
         },
         "feeds": {              // feeds which are enabled
                 'TD' : [
