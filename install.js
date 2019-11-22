@@ -26,16 +26,16 @@ function main() {
     })
     MongoClient.connect(config.mongo.connectionString, (err, dbclient) => {
 
-        var db=dbclient.db(config.mongo.databaseName)
-        
+        var db = dbclient.db(config.mongo.databaseName)
+
         if (err) {
             log.fatal("Error: " + err)
             return
-        
-        }
-        
 
-        
+        }
+
+
+
         boot.strap((done) => {
             var referenceDataFilename = 'Geography_20190519_to_20191214_from_20190531.txt.gz'
             log.info("Importing reference data from " + referenceDataFilename)
@@ -76,11 +76,11 @@ function main() {
                 importDarwinSchedule(db, () => {
                     log.info("Darwin Schedule data imported!")
                     log.info('install complete')
-                    db.close()
                     process.exit()
                 })
             })
         })
+        dbclient.close()
     })
 }
 
@@ -140,7 +140,7 @@ function importSMART(db, cb) {
             dataStream.pipe(gzip).pipe(jstream).pipe(es.mapSync((data) => {
                 rows++
                 data.type = 'SMART'
-                //log.info(data)
+                    //log.info(data)
                 collection.update({
                         type: 'SMART',
                         'FROMBERTH': data.FROMBERTH,
@@ -489,14 +489,14 @@ function importSchedule(db, options, cb) {
         var records = 0
         var dataURI = response.request.uri.href
         var dataStream = request({
-            uri: dataURI,
-            method: "GET",
-            gzip: true,
-            followRedirect: false
-        })
-        //if (!options['update']) { // turns out update are gzipped too
+                uri: dataURI,
+                method: "GET",
+                gzip: true,
+                followRedirect: false
+            })
+            //if (!options['update']) { // turns out update are gzipped too
         dataStream = dataStream.pipe(gzip)
-        //}
+            //}
         var schedDone = false
         var assocDone = false
         var tiplocDone = false
@@ -741,84 +741,84 @@ function importDarwinReference(db, cb) {
     var gzip = zlib.createGunzip()
     db.collection('reference', (err, collection) => {
         c.on('ready', () => {
-            c.list('.', (err, list) => {
-                list.forEach((file) => {
-                    if (file.name.match(/ref_v3.xml.gz$/) != null) {
-                        log.debug('importDarwinReference', "retrieve " + file.name)
-                        c.get(file.name, (err, stream) => {
-                            if (err) throw err;
-                            stream.once('close', () => {
-                                c.end();
-                            });
-                            var unzipped = stream.pipe(gzip)
-                            unzipped.pipe(xmlNodes('LocationRef')).pipe(xmlObjects()).on('data', (data) => {
-                                log.debug('LocationRef', data.LocationRef)
-                                var location = data.LocationRef.$
-                                // update a location that already exists with the darwin data - lookup by TIPLOC
-                                var updateDoc = {
-                                    'darwin': {
-                                        'locname': location.locname,
-                                        'crs': location.crs,
-                                        'toc': location.toc
+                c.list('.', (err, list) => {
+                    list.forEach((file) => {
+                        if (file.name.match(/ref_v3.xml.gz$/) != null) {
+                            log.debug('importDarwinReference', "retrieve " + file.name)
+                            c.get(file.name, (err, stream) => {
+                                if (err) throw err;
+                                stream.once('close', () => {
+                                    c.end();
+                                });
+                                var unzipped = stream.pipe(gzip)
+                                unzipped.pipe(xmlNodes('LocationRef')).pipe(xmlObjects()).on('data', (data) => {
+                                    log.debug('LocationRef', data.LocationRef)
+                                    var location = data.LocationRef.$
+                                        // update a location that already exists with the darwin data - lookup by TIPLOC
+                                    var updateDoc = {
+                                        'darwin': {
+                                            'locname': location.locname,
+                                            'crs': location.crs,
+                                            'toc': location.toc
+                                        }
                                     }
-                                }
-                                log.debug('update', updateDoc)
-                                collection.update({
-                                    $and: [{
-                                        'refType': {
-                                            $eq: 'GeographicData'
-                                        }
+                                    log.debug('update', updateDoc)
+                                    collection.update({
+                                        $and: [{
+                                            'refType': {
+                                                $eq: 'GeographicData'
+                                            }
+                                        }, {
+                                            'TIPLOC': {
+                                                $eq: location.tpl
+                                            }
+                                        }]
                                     }, {
-                                        'TIPLOC': {
-                                            $eq: location.tpl
-                                        }
-                                    }]
-                                }, {
-                                    $set: updateDoc
-                                }, {
-                                    upsert: true
+                                        $set: updateDoc
+                                    }, {
+                                        upsert: true
+                                    })
+                                });
+                                unzipped.pipe(xmlNodes('Via')).pipe(xmlObjects()).on('data', (data) => {
+                                    log.debug('Via', data.Via)
+                                    var viaPoint = data.Via.$
+                                    viaPoint.refType = 'Via'
+                                    collection.insert(viaPoint)
                                 })
-                            });
-                            unzipped.pipe(xmlNodes('Via')).pipe(xmlObjects()).on('data', (data) => {
-                                log.debug('Via', data.Via)
-                                var viaPoint = data.Via.$
-                                viaPoint.refType = 'Via'
-                                collection.insert(viaPoint)
-                            })
-                            unzipped.pipe(xmlNodes('TocRef')).pipe(xmlObjects()).on('data', (data) => {
-                                //log.debug('TocRef', data.Via)
-                                var tocRecord = data.TocRef.$
-                                tocRecord.refType = 'TocRef'
-                                collection.insert(tocRecord)
-                            })
-                            unzipped.pipe(xmlNodes('LateRunningReasons')).pipe(xmlNodes('Reason')).pipe(xmlObjects()).on('data', (data) => {
-                                //log.debug('LateRunningReason', data.Reason)
-                                var lateReason = data.Reason.$
-                                lateReason.refType = 'LateRunningReason'
-                                collection.update({
-                                    'refType': 'LateRunningReason',
-                                    code: lateReason.code
-                                }, lateReason, {
-                                    upsert: true
+                                unzipped.pipe(xmlNodes('TocRef')).pipe(xmlObjects()).on('data', (data) => {
+                                    //log.debug('TocRef', data.Via)
+                                    var tocRecord = data.TocRef.$
+                                    tocRecord.refType = 'TocRef'
+                                    collection.insert(tocRecord)
                                 })
-                            })
-                            unzipped.pipe(xmlNodes('CancellationReasons')).pipe(xmlNodes('Reason')).pipe(xmlObjects()).on('data', (data) => {
-                                //log.debug('CancellationReason', data.Reason)
-                                var cancelledReason = data.Reason.$
-                                cancelledReason.refType = 'LateRunningReason'
-                                collection.update({
-                                    'refType': 'CancelledReason',
-                                    code: cancelledReason.code
-                                }, cancelledReason, {
-                                    upsert: true
+                                unzipped.pipe(xmlNodes('LateRunningReasons')).pipe(xmlNodes('Reason')).pipe(xmlObjects()).on('data', (data) => {
+                                    //log.debug('LateRunningReason', data.Reason)
+                                    var lateReason = data.Reason.$
+                                    lateReason.refType = 'LateRunningReason'
+                                    collection.update({
+                                        'refType': 'LateRunningReason',
+                                        code: lateReason.code
+                                    }, lateReason, {
+                                        upsert: true
+                                    })
+                                })
+                                unzipped.pipe(xmlNodes('CancellationReasons')).pipe(xmlNodes('Reason')).pipe(xmlObjects()).on('data', (data) => {
+                                    //log.debug('CancellationReason', data.Reason)
+                                    var cancelledReason = data.Reason.$
+                                    cancelledReason.refType = 'LateRunningReason'
+                                    collection.update({
+                                        'refType': 'CancelledReason',
+                                        code: cancelledReason.code
+                                    }, cancelledReason, {
+                                        upsert: true
+                                    })
                                 })
                             })
-                        })
-                    }
+                        }
+                    })
                 })
             })
-        })
-        // connect to localhost:21 as anonymous
+            // connect to localhost:21 as anonymous
         c.connect({
             host: config.darwin.ftpHost,
             port: 21,
@@ -833,40 +833,40 @@ function importDarwinSchedule(db, cb) {
     var gzip = zlib.createGunzip()
     db.collection('dschedule', function(err, collection) {
         c.on('ready', () => {
-            c.list('.', (err, list) => {
-                list.forEach((file) => {
-                    if (file.name.match(/_v8.xml.gz$/) != null) {
-                        log.debug('importDarwinSchedule', "retrieve " + file.name)
-                        c.get(file.name, (err, stream) => {
-                            if (err) throw err;
-                            stream.once('close', () => {
-                                c.end();
-                            });
-                            var unzipped = stream.pipe(gzip)
-                            unzipped.pipe(xmlNodes('Journey')).pipe(xmlObjects({
-                                explicitChildren: true,
-                                preserveChildrenOrder: true
-                            })).on('data', function(data) {
-                                log.debug('Journey', data.Journey)
-                                var journey = data.Journey.$
-                                // update a location that already exists with the darwin data - lookup by TIPLOC
+                c.list('.', (err, list) => {
+                    list.forEach((file) => {
+                        if (file.name.match(/_v8.xml.gz$/) != null) {
+                            log.debug('importDarwinSchedule', "retrieve " + file.name)
+                            c.get(file.name, (err, stream) => {
+                                if (err) throw err;
+                                stream.once('close', () => {
+                                    c.end();
+                                });
+                                var unzipped = stream.pipe(gzip)
+                                unzipped.pipe(xmlNodes('Journey')).pipe(xmlObjects({
+                                    explicitChildren: true,
+                                    preserveChildrenOrder: true
+                                })).on('data', function(data) {
+                                    log.debug('Journey', data.Journey)
+                                    var journey = data.Journey.$
+                                        // update a location that already exists with the darwin data - lookup by TIPLOC
 
-                                log.debug('update', journey)
-                                collection.update({
-                                    'rid': journey.rid
-                                }, {
-                                    $set: journey
-                                }, {
-                                    upsert: true
-                                })
-                            });
+                                    log.debug('update', journey)
+                                    collection.update({
+                                        'rid': journey.rid
+                                    }, {
+                                        $set: journey
+                                    }, {
+                                        upsert: true
+                                    })
+                                });
 
-                        })
-                    }
+                            })
+                        }
+                    })
                 })
             })
-        })
-        // connect to localhost:21 as anonymous
+            // connect to localhost:21 as anonymous
         c.connect({
             host: config.darwin.ftpHost,
             port: 21,
