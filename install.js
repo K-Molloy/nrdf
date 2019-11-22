@@ -130,7 +130,7 @@ function importSMART(db, cb) {
         }
         var rows = 0
 
-        db.collection('SMART', (err, collection) => {
+        db.collection('smart', (err, collection) => {
             collection.createIndexes({
                 'FROMBERTH': 1,
                 'TOBERTH': 1
@@ -188,7 +188,7 @@ function importCORPUS(db, cb) {
             log.info("Processed " + items + " CORPUS rows")
         }
 
-        db.collection('CORPUS', (err, collection) => {
+        db.collection('corpus', (err, collection) => {
             collection.remove({}, {}, () => {
                 log.info('CORPUS purged')
                 collection.ensureIndex({
@@ -231,7 +231,7 @@ function importCORPUS(db, cb) {
 
 function importReferenceData(db, filename, cb) {
     log.debug('importReferenceData')
-    db.collection('REFERENCE', (err, collection) => {
+    db.collection('reference', (err, collection) => {
         collection.remove({}, {}, () => { // delete the entire contents first, then repopulate it
             log.info('reference collection purged')
             collection.ensureIndex({
@@ -543,7 +543,7 @@ function importSchedule(db, options, cb) {
             })
         }
 
-        db.collection('SCHEDULE', (err, collection) => {
+        db.collection('schedule', (err, collection) => {
             collection.ensureIndex({
                 'CIF_train_uid': 1
             }, (err) => {
@@ -585,7 +585,7 @@ function importSchedule(db, options, cb) {
 
 
 
-        db.collection('ASSOCIATION', (err, collection) => {
+        db.collection('association', (err, collection) => {
             if (err) {
                 log.error(err)
             }
@@ -660,7 +660,7 @@ function importSchedule(db, options, cb) {
             })
         })
 
-        db.collection('TIPLOC', (err, collection) => {
+        db.collection('tiploc', (err, collection) => {
             collection.ensureIndex({
                 'tiploc_code': 1,
                 'stanox': 1,
@@ -739,7 +739,7 @@ function importSchedule(db, options, cb) {
 function importDarwinReference(db, cb) {
     var c = new ftpClient();
     var gzip = zlib.createGunzip()
-    db.collection('REFERENCE', (err, collection) => {
+    db.collection('reference', (err, collection) => {
         c.on('ready', () => {
             c.list('.', (err, list) => {
                 list.forEach((file) => {
@@ -831,7 +831,7 @@ function importDarwinReference(db, cb) {
 function importDarwinSchedule(db, cb) {
     var c = new ftpClient();
     var gzip = zlib.createGunzip()
-    db.collection('DSCHEDULE', function(err, collection) {
+    db.collection('dschedule', function(err, collection) {
         c.on('ready', () => {
             c.list('.', (err, list) => {
                 list.forEach((file) => {

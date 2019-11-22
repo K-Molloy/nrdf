@@ -19,7 +19,7 @@ MongoClient.connect(config.mongo.connectionString, (err, db) =>
 
 	server.get( '/test', function (req, resp, next)
 	{
-		var collection = db.collection('TRAINS')
+		var collection = db.collection('trains')
 		collection.find({'movementActive':true, 'tdActive': true, 'lastSeen.location.TIPLOC': 'LEWISHM'}).toArray( (error, doc) => {
          log.debug(doc)
 			resp.end(JSON.stringify(doc))

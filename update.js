@@ -26,7 +26,7 @@ MongoClient.connect(config.mongo.connectionString, (err, dbclient) => {
     // clean up old trains
     var lastWeek = moment().subtract('7', 'days')
     log.info("Deleting TRAINS older than 7 days old (" + lastWeek.unix() + ")")
-    var trains = db.collection('TRAINS')
+    var trains = db.collection('trains')
     trains.remove({
         'lastUpdated': {
             $lt: lastWeek.unix()
