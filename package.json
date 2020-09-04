@@ -21,7 +21,7 @@
     "event-stream": "*",
     "ftp": "^0.3.10",
     "moment": "*",
-    "mongodb": "^2.2.33",
+    "mongodb": "^3.6.1",
     "onboot": "^1.0.0",
     "request": "*",
     "restify": "^4.3.0",
